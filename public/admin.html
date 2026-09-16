@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Admin - Loja de Apps</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .admin-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .admin-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        .form-group { margin-bottom: 15px; }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .app-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #f0f0f0;
+        }
+        .app-card:hover {
+            border-color: #667eea;
+        }
+        @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+            .apps-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 Painel de Admin</h1>
+            <p>Gerencie seus aplicativos</p>
+        </header>
+
+        <div class="admin-section">
+            <h2>🔐 Adicionar Novo App</h2>
+            <div id="message" class="message"></div>
+            <form id="appForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">🔑 Senha Admin</label>
+                        <input type="password" id="password" placeholder="Sua senha" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appName">📱 Nome</label>
+                        <input type="text" id="appName" placeholder="Nome do app" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="description">📝 Descrição</label>
+                    <textarea id="description" placeholder="Descreva seu app..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="price">💵 Preço</label>
+                        <input type="number" id="price" placeholder="29.99" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appLink">🔗 Link</label>
+                        <input type="url" id="appLink" placeholder="https://seu-app.com" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="icon">🎨 Ícone (URL)</label>
+                    <input type="url" id="icon" placeholder="https://icon.png">
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">➕ Adicionar</button>
+                    <button type="reset" style="background: #f0f0f0; color: #333;">🔄 Limpar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <h2>📊 Seus Apps</h2>
+            <div id="appsList" class="apps-grid">
+                <p>Carregando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        document.getElementById('appForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const name = document.getElementById('appName').value;
+            const description = document.getElementById('description').value;
+            const price = parseFloat(document.getElementById('price').value);
+            const appLink = document.getElementById('appLink').value;
+            const icon = document.getElementById('icon').value;
+
+            try {
+                const response = await fetch(`${API_URL}/admin/add-app`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password, name, description, price, appLink, icon })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage('✅ App adicionado!', 'success');
+                    document.getElementById('appForm').reset();
+                    loadApps();
+                } else {
+                    showMessage('❌ ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Erro: ' + error.message, 'error');
+            }
+        });
+
+        async function loadApps() {
+            try {
+                const password = prompt('Senha de admin:');
+                if (!password) return;
+                const response = await fetch(`${API_URL}/admin/list-apps?password=${password}`);
+                const data = await response.json();
+                const apps = data.apps || [];
+                const appsList = document.getElementById('appsList');
+                
+                if (apps.length === 0) {
+                    appsList.innerHTML = '<p>Nenhum app adicionado</p>';
+                    return;
+                }
+
+                appsList.innerHTML = apps.map(app => `
+                    <div class="app-card">
+                        <h3>${app.name}</h3>
+                        <p>R$ ${app.price.toFixed(2)}</p>
+                        <a href="${app.appLink}" target="_blank" style="color: #667eea;">${app.appLink}</a>
+                        <p style="color: #999; font-size: 0.9em;">👁️ ${app.views || 0} visualizações</p>
+                        <button class="btn-danger" onclick="deleteApp('${app._id}')">🗑️ Deletar</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        async function deleteApp(id) {
+            if (!confirm('Deletar este app?')) return;
+            const password = prompt('Senha:');
+            if (!password) return;
+            try {
+                const response = await fetch(`${API_URL}/admin/delete-app/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                if (response.ok) {
+                    showMessage('✅ Deletado!', 'success');
+                    loadApps();
+                } else {
+                    showMessage('❌ Erro ao deletar', 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Erro: ' + error.message, 'error');
+            }
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            msg.style.display = 'block';
+            setTimeout(() => { msg.style.display = 'none'; }, 5000);
+        }
+
+        loadApps();
+    </script>
+</body>
+</html>

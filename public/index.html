@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛍️ Loja de Apps</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .app-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .app-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .app-price {
+            font-size: 1.8em;
+            color: #764ba2;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .btn-buy {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .btn-buy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.3);
+        }
+        .admin-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            color: #667eea;
+            padding: 15px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            .apps-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛍️ Loja de Apps</h1>
+            <p>Compre acesso aos melhores aplicativos</p>
+        </header>
+        <div id="appsList" class="apps-grid">
+            <div style="grid-column: 1/-1; text-align: center; color: white;">
+                <h2>⏳ Carregando apps...</h2>
+            </div>
+        </div>
+    </div>
+    <a href="/admin" class="admin-link">🔐 Admin</a>
+    <script>
+        async function loadApps() {
+            try {
+                const response = await fetch('/api/apps');
+                const apps = await response.json();
+                const appsList = document.getElementById('appsList');
+                
+                if (!apps || apps.length === 0) {
+                    appsList.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: white;"><h2>😴 Nenhum app disponível</h2></div>';
+                    return;
+                }
+
+                appsList.innerHTML = apps.map(app => `
+                    <div class="app-card">
+                        <h3>${app.name}</h3>
+                        ${app.description ? `<p>${app.description}</p>` : ''}
+                        <div class="app-price">R$ ${app.price.toFixed(2)}</div>
+                        <a href="${app.appLink}" target="_blank" style="color: #667eea; text-decoration: none;">🔗 ${app.appLink}</a><br><br>
+                        <button class="btn-buy" onclick="buyApp('${app._id}', '${app.name}', ${app.price})">💳 Comprar Acesso</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+        function buyApp(id, name, price) {
+            alert(`🎉 ${name}\nR$ ${price.toFixed(2)}\n\nFuncionalidade em desenvolvimento!`);
+        }
+        loadApps();
+    </script>
+</body>
+</html>
